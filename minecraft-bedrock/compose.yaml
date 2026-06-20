@@ -1,0 +1,15 @@
+services:
+  mc:
+    image: itzg/minecraft-bedrock-server:latest
+    container_name: minecraft-bedrock-server
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      EULA: "true"
+      OVERRIDE_SERVER_PROPERTIES: "false"
+      EXISTING_WHITELIST_FILE: SKIP
+    volumes:
+      - ${APP_DATA_PATH}:/data
+    tty: true
+    stdin_open: true
+networks: {}
