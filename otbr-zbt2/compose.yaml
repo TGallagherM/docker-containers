@@ -1,0 +1,18 @@
+services:
+  otbr:
+    image: openthread/otbr:latest
+    container_name: otbr-zbt2
+    restart: unless-stopped
+    network_mode: host
+    privileged: true
+    user: ${PUID}:${PGID}
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    volumes:
+      - ${OTBR_DATA_PATH}:/var/lib/thread
+    devices:
+      - /dev/serial/by-id:/dev/serial/by-id
+    environment:
+      - OTBR_AGENT_OPTS=${OTBR_AGENT_OPTS}
+networks: {}
