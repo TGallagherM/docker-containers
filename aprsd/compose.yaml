@@ -1,0 +1,33 @@
+services:
+  aprsd:
+    image: hemna6969/aprsd:master
+    container_name: aprsd
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+      - PYTHONPATH=/app:/plugins
+    volumes:
+      - ${CONFIG_VOLUME_PATH}:/config
+      - ${PLUGINS_VOLUME_PATH}:/plugins
+    command: server --config /config/aprsd.conf --loglevel DEBUG
+    ports:
+      - 18864:8080
+  aprsd-admin:
+    image: hemna6969/aprsd:master
+    container_name: aprsd-admin
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+      - PYTHONPATH=/app:/plugins
+    volumes:
+      - ${CONFIG_VOLUME_PATH}:/config
+      - ${PLUGINS_VOLUME_PATH}:/plugins
+    # Try passing the config AFTER the 'web' command
+    command: admin web --config /config/aprsd.conf
+    ports:
+      - 18866:18866
+networks: {}
