@@ -1,0 +1,44 @@
+services:
+  gluetun:
+    image: ghcr.io/qdm12/gluetun:latest
+    container_name: vpn-gateway
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      - VPN_SERVICE_PROVIDER=custom
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES}
+      - WIREGUARD_PORT=${VPN_ENDPOINT_PORT}
+      - WIREGUARD_PUBLIC_KEY=${WIREGUARD_PUBLIC_KEY}
+      - VPN_ENDPOINT_IP=${VPN_ENDPOINT_IP}
+      - VPN_ENDPOINT_PORT=${VPN_ENDPOINT_PORT}
+    restart: no
+  kaspersky-kuu:
+    build:
+      context: .
+      dockerfile_inline: >
+        FROM ubuntu:22.04 RUN apt-get update && \
+            DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            ca-certificates libc6 libstdc++6 && \
+            rm -rf /var/lib/apt/lists/*
+    container_name: kaspersky-updater
+    network_mode: service:gluetun
+    user: ${PUID}:${PGID}
+    volumes:
+      - ${KAS_APP_PATH}:/app
+      - ${KAS_UPDATES_PATH}:/app/Updates
+    working_dir: /app
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    command: >
+      bash -c " echo 'Waiting for VPN...'; until grep -q '00000000'
+      /proc/net/route; do sleep 2; done; echo 'Launching Utility (Verbose
+      Mode)...'; /app/uu-console.sh --accepteula --acceptprivacypolicy
+      --declineksn -u  -o /app/updater.ini -r -t; RESULT=$$?; echo
+      '-----------------------------------'; echo 'UTILITY EXECUTION FINISHED';
+      echo 'EXIT CODE: ' $$RESULT; echo '-----------------------------------';"
+networks: {}
